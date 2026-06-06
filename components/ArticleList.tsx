@@ -133,8 +133,28 @@ const ArticleList = forwardRef<ArticleListHandle, Props>(function ArticleList({ 
 
       {/* Scrollable list */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3">
-        {groups.map(({ regionKey, regionLabel, spots }) => (
-          <section key={regionKey} data-region={regionKey} className="mb-1">
+        {groups.map(({ regionKey, regionLabel, regionType, spots }, i) => {
+          const prev = groups[i - 1];
+          const isFirstOverseas = regionType === 'country' && (i === 0 || prev?.regionType === 'prefecture');
+          const isFirstJapan = regionType === 'prefecture' && i === 0;
+          return (
+          <div key={regionKey}>
+            {/* セパレーター */}
+            {isFirstJapan && (
+              <div className="flex items-center gap-2 mb-1 mt-1">
+                <span className="text-xs shrink-0" style={{ color: 'var(--text-muted)', fontFamily: 'Cormorant Garamond, serif', letterSpacing: '0.1em' }}>🇯🇵 日本国内</span>
+                <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+              </div>
+            )}
+            {isFirstOverseas && (
+              <div className="flex items-center gap-2 mb-1 mt-3">
+                <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+                <span className="text-xs shrink-0" style={{ color: 'var(--text-muted)', fontFamily: 'Cormorant Garamond, serif', letterSpacing: '0.1em' }}>🌏 海外</span>
+                <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+              </div>
+            )}
+
+            <section data-region={regionKey} className="mb-1">
             {/* Region header */}
             <button
               onClick={() => onRegionClick(regionKey)}
@@ -167,8 +187,10 @@ const ArticleList = forwardRef<ArticleListHandle, Props>(function ArticleList({ 
                 onToggle={() => setOpenSpotId(openSpotId === spot.id ? null : spot.id)}
               />
             ))}
-          </section>
-        ))}
+            </section>
+          </div>
+          );
+        })}
         <div className="h-6" />
       </div>
     </div>

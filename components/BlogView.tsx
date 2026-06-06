@@ -107,9 +107,19 @@ export default function BlogView({ allSpots }: Props) {
   }, [allSpots]);
 
   const regions = useMemo(() => {
-    const map = new Map<string, number>();
-    allSpots.forEach((s) => map.set(s.regionLabel, (map.get(s.regionLabel) ?? 0) + 1));
-    return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
+    const japan = new Map<string, number>();
+    const overseas = new Map<string, number>();
+    allSpots.forEach((s) => {
+      if (s.regionType === 'prefecture') {
+        japan.set(s.regionLabel, (japan.get(s.regionLabel) ?? 0) + 1);
+      } else {
+        overseas.set(s.regionLabel, (overseas.get(s.regionLabel) ?? 0) + 1);
+      }
+    });
+    return {
+      japan: Array.from(japan.entries()).sort((a, b) => b[1] - a[1]),
+      overseas: Array.from(overseas.entries()).sort((a, b) => b[1] - a[1]),
+    };
   }, [allSpots]);
 
   // フィルタリング
@@ -145,9 +155,26 @@ export default function BlogView({ allSpots }: Props) {
       </SidebarSection>
 
       <SidebarSection title="REGION">
-        {regions.map(([region, count]) => (
-          <SidebarLink key={region} label={region} count={count} active={filter.type === 'region' && filter.value === region} onClick={() => setF('region', region)} />
-        ))}
+        {regions.japan.length > 0 && (
+          <div className="mb-2">
+            <p className="text-xs mb-1" style={{ color: 'var(--text-muted)', fontFamily: 'Cormorant Garamond, serif', opacity: 0.7 }}>🇯🇵 日本国内</p>
+            <div className="pl-2">
+              {regions.japan.map(([region, count]) => (
+                <SidebarLink key={region} label={region} count={count} active={filter.type === 'region' && filter.value === region} onClick={() => setF('region', region)} />
+              ))}
+            </div>
+          </div>
+        )}
+        {regions.overseas.length > 0 && (
+          <div>
+            <p className="text-xs mb-1 mt-2" style={{ color: 'var(--text-muted)', fontFamily: 'Cormorant Garamond, serif', opacity: 0.7 }}>🌏 海外</p>
+            <div className="pl-2">
+              {regions.overseas.map(([region, count]) => (
+                <SidebarLink key={region} label={region} count={count} active={filter.type === 'region' && filter.value === region} onClick={() => setF('region', region)} />
+              ))}
+            </div>
+          </div>
+        )}
       </SidebarSection>
     </aside>
   );

@@ -170,8 +170,15 @@ export function dbSpotToSpot(s: DbSpot): Spot {
   };
 }
 
-// Group spots by regionKey, preserving first-encounter order
-export function getRegionGroups(allSpots: Spot[] = SPOTS): { regionKey: string; regionLabel: string; spots: Spot[] }[] {
+export interface RegionGroup {
+  regionKey: string;
+  regionLabel: string;
+  regionType: RegionType;
+  spots: Spot[];
+}
+
+// Japan prefectures first, then overseas
+export function getRegionGroups(allSpots: Spot[] = SPOTS): RegionGroup[] {
   const order: string[] = [];
   const map = new Map<string, Spot[]>();
   for (const spot of allSpots) {
@@ -181,11 +188,18 @@ export function getRegionGroups(allSpots: Spot[] = SPOTS): { regionKey: string; 
     }
     map.get(spot.regionKey)!.push(spot);
   }
-  return order.map((key) => ({
-    regionKey: key,
-    regionLabel: map.get(key)![0].regionLabel,
-    spots: map.get(key)!,
-  }));
+  return order
+    .map((key) => ({
+      regionKey: key,
+      regionLabel: map.get(key)![0].regionLabel,
+      regionType: map.get(key)![0].regionType,
+      spots: map.get(key)!,
+    }))
+    .sort((a, b) => {
+      if (a.regionType === 'prefecture' && b.regionType === 'country') return -1;
+      if (a.regionType === 'country' && b.regionType === 'prefecture') return 1;
+      return 0;
+    });
 }
 
 export function getArticleRegionKeys(allSpots: Spot[] = SPOTS) {
