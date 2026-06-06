@@ -5,12 +5,28 @@ import PageLayout from '@/components/PageLayout';
 
 export default function ContactPage() {
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', message: '' });
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // TODO: 実際の送信処理（Formspree等のサービスと連携）
-    setSent(true);
+    setSending(true);
+    try {
+      const res = await fetch('https://formspree.io/f/xdavadwy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(form),
+      });
+      if (res.ok) {
+        setSent(true);
+      } else {
+        alert('送信に失敗しました。時間をおいて再度お試しください。');
+      }
+    } catch {
+      alert('通信エラーが発生しました。');
+    } finally {
+      setSending(false);
+    }
   }
 
   const inputStyle = {
@@ -92,17 +108,18 @@ export default function ContactPage() {
 
         <button
           type="submit"
-          className="w-full py-3 text-sm tracking-widest transition-opacity hover:opacity-70"
+          disabled={sending}
+          className="w-full py-3 text-sm tracking-widest transition-opacity hover:opacity-70 disabled:opacity-40"
           style={{
             background: 'var(--accent)',
             color: '#FAF7F2',
             fontFamily: 'Cormorant Garamond, serif',
             border: 'none',
             borderRadius: '4px',
-            cursor: 'pointer',
+            cursor: sending ? 'not-allowed' : 'pointer',
           }}
         >
-          送　信
+          {sending ? '送信中...' : '送　信'}
         </button>
       </form>
     </PageLayout>
