@@ -6,7 +6,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: {
-    default: `${SITE_NAME} — 時の痕跡をめぐる旅`,
+    default: `${SITE_NAME} — 廃墟・遺構を地図でめぐる`,
     template: `%s — ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,

@@ -104,10 +104,10 @@ const ArticleList = forwardRef<ArticleListHandle, Props>(function ArticleList({ 
       {/* Fixed header */}
       <div className="shrink-0 px-7 pt-7 pb-5" style={{ borderBottom: '1px solid var(--border)' }}>
         <p className="text-xs tracking-[0.3em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'Cormorant Garamond, serif' }}>
-          PATINA
+          ハイキャー
         </p>
         <h1 className="text-2xl font-light leading-tight mb-2" style={{ fontFamily: 'Cormorant Garamond, serif', color: 'var(--text)' }}>
-          時の痕跡を、めぐる旅。
+          廃墟・遺構を、地図でめぐる。
         </h1>
         <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)', fontFamily: 'Noto Serif JP, serif', fontWeight: 300 }}>
           地図の地域をクリックするとその場所の記録へ移動します

@@ -15,7 +15,7 @@ export default function PageLayout({ title, subtitle, children }: Props) {
           className="text-xs tracking-widest mb-8 inline-block transition-opacity hover:opacity-60"
           style={{ color: 'var(--text-muted)', fontFamily: 'Cormorant Garamond, serif' }}
         >
-          ← PATINA
+          ← ハイキャー
         </Link>
         <h1
           className="text-3xl md:text-4xl font-light mb-3 leading-tight"

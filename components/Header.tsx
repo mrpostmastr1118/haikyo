@@ -28,7 +28,7 @@ export default function Header() {
           style={{ color: 'var(--accent)', fontFamily: 'Cormorant Garamond, serif' }}
           onClick={() => setOpen(false)}
         >
-          PATINA
+          ハイキャー
         </Link>
 
         {/* Desktop nav */}

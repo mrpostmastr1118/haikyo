@@ -11,7 +11,7 @@ export default function ShareButtons({ url, title }: Props) {
   const [copied, setCopied] = useState(false);
 
   const encoded = encodeURIComponent(url);
-  const encodedTitle = encodeURIComponent(`${title} | PATINA`);
+  const encodedTitle = encodeURIComponent(`${title} | ハイキャー`);
 
   function copyUrl() {
     navigator.clipboard.writeText(url).then(() => {
