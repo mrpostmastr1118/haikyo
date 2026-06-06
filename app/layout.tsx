@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   },
   description: SITE_DESCRIPTION,
   metadataBase: new URL(SITE_URL),
+  verification: {
+    google: 'AMvO0A-LMbmO-KeP9XAzW6h92RJ2KfoKjrWTqG6UUeI',
+  },
   openGraph: {
     siteName: SITE_NAME,
     locale: 'ja_JP',
