@@ -140,11 +140,33 @@ export const SPOTS: Spot[] = [
   },
 ];
 
+import type { DbSpot } from './supabase';
+
+// DBのSpotをフロントの形式に変換
+export function dbSpotToSpot(s: DbSpot): Spot {
+  return {
+    id: s.id,
+    name: s.name,
+    locationLabel: s.location_label,
+    regionKey: s.region_key,
+    regionType: s.region_type,
+    regionLabel: s.region_label,
+    lat: s.lat,
+    lng: s.lng,
+    year_abandoned: s.year_abandoned ?? undefined,
+    excerpt: s.excerpt,
+    body: s.body,
+    image: s.images[0] ?? '',
+    images: s.images,
+    tags: s.tags,
+  };
+}
+
 // Group spots by regionKey, preserving first-encounter order
-export function getRegionGroups(): { regionKey: string; regionLabel: string; spots: Spot[] }[] {
+export function getRegionGroups(allSpots: Spot[] = SPOTS): { regionKey: string; regionLabel: string; spots: Spot[] }[] {
   const order: string[] = [];
   const map = new Map<string, Spot[]>();
-  for (const spot of SPOTS) {
+  for (const spot of allSpots) {
     if (!map.has(spot.regionKey)) {
       order.push(spot.regionKey);
       map.set(spot.regionKey, []);
@@ -158,4 +180,8 @@ export function getRegionGroups(): { regionKey: string; regionLabel: string; spo
   }));
 }
 
-export const ARTICLE_REGION_KEYS = new Set(SPOTS.map((s) => s.regionKey));
+export function getArticleRegionKeys(allSpots: Spot[] = SPOTS) {
+  return new Set(allSpots.map((s) => s.regionKey));
+}
+
+export const ARTICLE_REGION_KEYS = getArticleRegionKeys();

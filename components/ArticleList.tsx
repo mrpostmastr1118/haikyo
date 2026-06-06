@@ -2,7 +2,7 @@
 
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import Link from 'next/link';
-import { getRegionGroups, Spot } from '@/lib/spots';
+import { getRegionGroups, Spot, SPOTS } from '@/lib/spots';
 
 export interface ArticleListHandle {
   scrollToRegion: (regionKey: string) => void;
@@ -11,6 +11,7 @@ export interface ArticleListHandle {
 interface Props {
   activeRegion: string | null;
   onRegionClick: (regionKey: string) => void;
+  allSpots?: Spot[];
 }
 
 function PhotoStrip({ images }: { images: string[] }) {
@@ -105,10 +106,10 @@ function ArticleCard({ spot, isOpen, onToggle }: { spot: Spot; isOpen: boolean; 
   );
 }
 
-const ArticleList = forwardRef<ArticleListHandle, Props>(function ArticleList({ activeRegion, onRegionClick }, ref) {
+const ArticleList = forwardRef<ArticleListHandle, Props>(function ArticleList({ activeRegion, onRegionClick, allSpots = SPOTS }, ref) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [openSpotId, setOpenSpotId] = useState<string | null>(null);
-  const groups = getRegionGroups();
+  const groups = getRegionGroups(allSpots);
 
   useImperativeHandle(ref, () => ({
     scrollToRegion(regionKey: string) {

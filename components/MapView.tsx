@@ -7,6 +7,7 @@ import 'leaflet/dist/leaflet.css';
 interface Props {
   activeRegion: string | null;
   onRegionClick: (regionKey: string) => void;
+  regionKeys?: Set<string>;
 }
 
 const COLORS = {
@@ -16,9 +17,9 @@ const COLORS = {
   neutral: { fillColor: '#C8BFB0', fillOpacity: 0.12, color: '#B5A99A', weight: 0.4 },
 };
 
-function styleFor(regionKey: string, activeRegion: string | null): import('leaflet').PathOptions {
+function styleFor(regionKey: string, activeRegion: string | null, regionKeys: Set<string>): import('leaflet').PathOptions {
   if (regionKey === activeRegion) return COLORS.active;
-  if (ARTICLE_REGION_KEYS.has(regionKey)) return COLORS.article;
+  if (regionKeys.has(regionKey)) return COLORS.article;
   return COLORS.neutral;
 }
 
@@ -31,7 +32,7 @@ type AnyLayer = {
 
 type AnyGeoJSON = { eachLayer: (fn: (l: unknown) => void) => void };
 
-export default function MapView({ activeRegion, onRegionClick }: Props) {
+export default function MapView({ activeRegion, onRegionClick, regionKeys = ARTICLE_REGION_KEYS }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<ReturnType<typeof import('leaflet')['map']> | null>(null);
   const worldLayerRef = useRef<AnyGeoJSON | null>(null);
@@ -79,7 +80,7 @@ export default function MapView({ activeRegion, onRegionClick }: Props) {
         layer.eachLayer((l: unknown) => {
           const typed = l as AnyLayer;
           const key = getKey(typed.feature);
-          const hasArticle = ARTICLE_REGION_KEYS.has(key);
+          const hasArticle = regionKeys.has(key);
 
           typed.on({
             mouseover(e: { target: AnyLayer }) {
@@ -88,7 +89,7 @@ export default function MapView({ activeRegion, onRegionClick }: Props) {
               }
             },
             mouseout(e: { target: AnyLayer }) {
-              e.target.setStyle(styleFor(key, activeRegionRef.current));
+              e.target.setStyle(styleFor(key, activeRegionRef.current, regionKeys));
             },
             click() {
               if (hasArticle) onRegionClick(key);
@@ -100,14 +101,14 @@ export default function MapView({ activeRegion, onRegionClick }: Props) {
       const worldLayer = L.geoJSON(worldData, {
         style(feature): L.PathOptions {
           const key = (feature!.properties as Record<string, string>).ADM0_A3;
-          return styleFor(key, activeRegionRef.current);
+          return styleFor(key, activeRegionRef.current, regionKeys);
         },
       }).addTo(map);
 
       const japanLayer = L.geoJSON(japanData, {
         style(feature): L.PathOptions {
           const key = (feature!.properties as Record<string, string>).nam_ja;
-          return styleFor(key, activeRegionRef.current);
+          return styleFor(key, activeRegionRef.current, regionKeys);
         },
       }).addTo(map);
 
@@ -141,7 +142,7 @@ export default function MapView({ activeRegion, onRegionClick }: Props) {
       if (!layer) return;
       layer.eachLayer((l: unknown) => {
         const typed = l as AnyLayer;
-        typed.setStyle(styleFor(getKey(typed.feature), activeRegion));
+        typed.setStyle(styleFor(getKey(typed.feature), activeRegion, regionKeys));
       });
     }
     restyle(worldLayerRef.current, (f) => (f.properties as Record<string, string>).ADM0_A3);

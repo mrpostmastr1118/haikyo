@@ -1,8 +1,10 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import ArticleList, { ArticleListHandle } from '@/components/ArticleList';
+import { SPOTS, dbSpotToSpot, getArticleRegionKeys, type Spot } from '@/lib/spots';
+import { supabase } from '@/lib/supabase';
 
 const MapView = dynamic(() => import('@/components/MapView'), {
   ssr: false,
@@ -18,7 +20,25 @@ const MapView = dynamic(() => import('@/components/MapView'), {
 export default function Home() {
   const [activeRegion, setActiveRegion] = useState<string | null>(null);
   const [mobileTab, setMobileTab] = useState<'map' | 'list'>('list');
+  const [allSpots, setAllSpots] = useState<Spot[]>(SPOTS);
   const listRef = useRef<ArticleListHandle>(null);
+
+  // DBからスポットを取得してマージ
+  useEffect(() => {
+    supabase
+      .from('spots')
+      .select('*')
+      .eq('published', true)
+      .then(({ data }) => {
+        if (!data || data.length === 0) return;
+        const dbSpots = data.map(dbSpotToSpot);
+        const existingIds = new Set(SPOTS.map((s) => s.id));
+        const newSpots = dbSpots.filter((s) => !existingIds.has(s.id));
+        setAllSpots([...SPOTS, ...newSpots]);
+      });
+  }, []);
+
+  const regionKeys = getArticleRegionKeys(allSpots);
 
   function handleRegionClick(regionKey: string) {
     setActiveRegion(regionKey);
@@ -49,21 +69,15 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Content area — single MapView + single ArticleList, CSS controls layout */}
       <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
-        {/* Map panel */}
-        <div
-          className={`relative min-w-0 md:flex-1 ${mobileTab === 'map' ? 'flex-1' : 'hidden md:block'}`}
-        >
-          <MapView activeRegion={activeRegion} onRegionClick={handleRegionClick} />
+        <div className={`relative min-w-0 md:flex-1 ${mobileTab === 'map' ? 'flex-1' : 'hidden md:block'}`}>
+          <MapView activeRegion={activeRegion} onRegionClick={handleRegionClick} regionKeys={regionKeys} />
         </div>
-
-        {/* Article list panel */}
         <div
           className={`md:w-[390px] md:shrink-0 ${mobileTab === 'list' ? 'flex-1 overflow-hidden' : 'hidden md:block'}`}
           style={{ borderLeft: '1px solid var(--border)' }}
         >
-          <ArticleList ref={listRef} activeRegion={activeRegion} onRegionClick={handleRegionClick} />
+          <ArticleList ref={listRef} activeRegion={activeRegion} onRegionClick={handleRegionClick} allSpots={allSpots} />
         </div>
       </div>
     </div>
