@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { SPOTS } from '@/lib/spots';
 import { SITE_URL } from '@/lib/site';
 import ShareButtons from '@/components/ShareButtons';
+import ImageCarousel from '@/components/ImageCarousel';
 
 type Params = Promise<{ slug: string }>;
 
@@ -48,19 +49,14 @@ export default async function ArticlePage({ params }: { params: Params }) {
 
   return (
     <div className="h-full overflow-y-auto" style={{ background: 'var(--bg)' }}>
-      {/* Hero image */}
-      <div className="relative w-full" style={{ aspectRatio: '16/7', maxHeight: '420px', overflow: 'hidden' }}>
-        <img
-          src={spot.image}
-          alt={spot.name}
-          className="w-full h-full object-cover"
-          style={{ filter: 'sepia(12%) saturate(80%)' }}
-        />
+      {/* Hero carousel */}
+      <div className="relative w-full" style={{ maxHeight: '480px', overflow: 'hidden' }}>
+        <ImageCarousel images={spot.images} alt={spot.name} aspectRatio="16/7" interval={5000} />
         <div
-          className="absolute inset-0"
-          style={{ background: 'linear-gradient(to bottom, transparent 50%, rgba(44,36,23,0.6))' }}
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: 'linear-gradient(to bottom, transparent 40%, rgba(44,36,23,0.65))' }}
         />
-        <div className="absolute bottom-0 left-0 right-0 px-6 md:px-16 pb-8">
+        <div className="absolute bottom-0 left-0 right-0 px-6 md:px-16 pb-8 pointer-events-none">
           <p className="text-xs tracking-widest mb-2" style={{ color: 'rgba(250,247,242,0.8)', fontFamily: 'Cormorant Garamond, serif' }}>
             {spot.locationLabel}
           </p>

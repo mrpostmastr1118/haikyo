@@ -3,6 +3,7 @@
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import Link from 'next/link';
 import { getRegionGroups, Spot, SPOTS } from '@/lib/spots';
+import ImageCarousel from '@/components/ImageCarousel';
 
 export interface ArticleListHandle {
   scrollToRegion: (regionKey: string) => void;
@@ -41,18 +42,13 @@ function ArticleCard({ spot, isOpen, onToggle }: { spot: Spot; isOpen: boolean; 
       className="overflow-hidden rounded-lg mb-3"
       style={{ border: '1px solid var(--border)', background: isOpen ? 'rgba(139,100,53,0.03)' : 'transparent' }}
     >
-      {/* Hero image — always visible, clickable */}
-      <button onClick={onToggle} className="w-full text-left block">
-        <div className="w-full overflow-hidden" style={{ aspectRatio: '3/2' }}>
-          <img
-            src={spot.images[0]}
-            alt={spot.name}
-            className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-            style={{ filter: 'sepia(12%) saturate(85%)' }}
-          />
-        </div>
+      {/* Hero carousel */}
+      <div onClick={onToggle} className="cursor-pointer">
+        <ImageCarousel images={spot.images} alt={spot.name} aspectRatio="3/2" interval={4000} />
+      </div>
 
-        {/* Card info */}
+      {/* Card info */}
+      <button onClick={onToggle} className="w-full text-left block">
         <div className="px-4 pt-3 pb-3 flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="text-xs mb-1 truncate" style={{ color: 'var(--accent)', fontFamily: 'Cormorant Garamond, serif', letterSpacing: '0.05em' }}>
