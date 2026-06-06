@@ -12,9 +12,10 @@ export interface Spot {
   year_abandoned?: number;
   excerpt: string;
   body: string;
-  image: string;    // OGP用メイン画像（images[0]と同じ）
-  images: string[]; // 複数写真（1枚目がメイン）
+  image: string;
+  images: string[];
   tags: string[];
+  publishedAt: string; // YYYY-MM-DD
 }
 
 export const SPOTS: Spot[] = [
@@ -37,6 +38,7 @@ export const SPOTS: Spot[] = [
       'https://images.unsplash.com/photo-1480796927426-f609979314bd?w=800&q=80',
     ],
     tags: ['廃都市', '海', '産業遺産'],
+    publishedAt: '2025-11-10',
   },
   {
     id: 'ta-prohm',
@@ -57,6 +59,7 @@ export const SPOTS: Spot[] = [
       'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&q=80',
     ],
     tags: ['遺跡', '密林', '寺院'],
+    publishedAt: '2025-11-28',
   },
   {
     id: 'bokor',
@@ -77,6 +80,7 @@ export const SPOTS: Spot[] = [
       'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80',
     ],
     tags: ['廃ホテル', '霧', '植民地遺構'],
+    publishedAt: '2025-12-05',
   },
   {
     id: 'pripyat',
@@ -97,6 +101,7 @@ export const SPOTS: Spot[] = [
       'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=800&q=80',
     ],
     tags: ['廃都市', '自然回帰', '近代遺構'],
+    publishedAt: '2026-01-14',
   },
   {
     id: 'kolmanskop',
@@ -117,6 +122,7 @@ export const SPOTS: Spot[] = [
       'https://images.unsplash.com/photo-1504701954957-2010ec3bcec1?w=800&q=80',
     ],
     tags: ['廃村', '砂漠', '植民地遺構'],
+    publishedAt: '2026-02-20',
   },
   {
     id: 'caithness',
@@ -137,6 +143,7 @@ export const SPOTS: Spot[] = [
       'https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=800&q=80',
     ],
     tags: ['廃城', '苔', '中世遺構'],
+    publishedAt: '2026-03-08',
   },
 ];
 
@@ -159,6 +166,7 @@ export function dbSpotToSpot(s: DbSpot): Spot {
     image: s.images[0] ?? '',
     images: s.images,
     tags: s.tags,
+    publishedAt: s.created_at.slice(0, 10),
   };
 }
 
