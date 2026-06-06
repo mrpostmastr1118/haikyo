@@ -88,8 +88,8 @@ export default function NewArticlePage() {
       region_key: form.region_key,
       region_type: form.region_type,
       region_label: form.region_label,
-      lat: parseFloat(form.lat),
-      lng: parseFloat(form.lng),
+      lat: form.lat ? parseFloat(form.lat) : 0,
+      lng: form.lng ? parseFloat(form.lng) : 0,
       year_abandoned: form.year_abandoned ? parseInt(form.year_abandoned) : null,
       excerpt: form.excerpt,
       body: form.body,
@@ -190,16 +190,16 @@ export default function NewArticlePage() {
         {/* 緯度経度 */}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={label}>緯度 <span className="text-red-400">*</span></label>
-            <input required type="number" step="any" className={field} value={form.lat} onChange={(e) => set('lat', e.target.value)} placeholder="35.6762" />
+            <label className={label}>緯度（任意）</label>
+            <input type="number" step="any" className={field} value={form.lat} onChange={(e) => set('lat', e.target.value)} placeholder="35.6762" />
           </div>
           <div>
-            <label className={label}>経度 <span className="text-red-400">*</span></label>
-            <input required type="number" step="any" className={field} value={form.lng} onChange={(e) => set('lng', e.target.value)} placeholder="139.6503" />
+            <label className={label}>経度（任意）</label>
+            <input type="number" step="any" className={field} value={form.lng} onChange={(e) => set('lng', e.target.value)} placeholder="139.6503" />
           </div>
         </div>
         <p className="text-xs text-gray-400 -mt-3">
-          <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" className="text-amber-600 underline">Googleマップ</a>で場所を右クリック → 緯度経度をコピー
+          <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" className="text-amber-600 underline">Googleマップ</a>で場所を右クリック → 緯度経度をコピー（省略可）
         </p>
 
         {/* 廃墟化年 */}
