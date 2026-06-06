@@ -13,64 +13,85 @@ interface Props {
   onRegionClick: (regionKey: string) => void;
 }
 
+function PhotoStrip({ images }: { images: string[] }) {
+  if (images.length <= 1) return null;
+  return (
+    <div
+      className="flex gap-1.5 overflow-x-auto pb-1 mt-2"
+      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+    >
+      {images.slice(1).map((src, i) => (
+        <div key={i} className="shrink-0 rounded overflow-hidden" style={{ width: 96, height: 72 }}>
+          <img
+            src={src}
+            alt=""
+            className="w-full h-full object-cover"
+            style={{ filter: 'sepia(12%) saturate(85%)' }}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function ArticleCard({ spot, isOpen, onToggle }: { spot: Spot; isOpen: boolean; onToggle: () => void }) {
   return (
     <article
-      className="border-b last:border-b-0 transition-colors"
-      style={{ borderColor: 'var(--border)' }}
+      className="overflow-hidden rounded-lg mb-3"
+      style={{ border: '1px solid var(--border)', background: isOpen ? 'rgba(139,100,53,0.03)' : 'transparent' }}
     >
-      <button
-        onClick={onToggle}
-        className="w-full text-left flex gap-3 py-4 px-1 group"
-      >
-        <div
-          className="shrink-0 w-20 h-16 rounded overflow-hidden"
-          style={{ filter: 'sepia(15%) saturate(85%)' }}
-        >
-          <img src={spot.image} alt={spot.name} className="w-full h-full object-cover" />
+      {/* Hero image — always visible, clickable */}
+      <button onClick={onToggle} className="w-full text-left block">
+        <div className="w-full overflow-hidden" style={{ aspectRatio: '3/2' }}>
+          <img
+            src={spot.images[0]}
+            alt={spot.name}
+            className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+            style={{ filter: 'sepia(12%) saturate(85%)' }}
+          />
         </div>
-        <div className="flex-1 min-w-0 flex flex-col justify-center">
-          <p className="text-xs mb-0.5 truncate" style={{ color: 'var(--accent)', fontFamily: 'Cormorant Garamond, serif', letterSpacing: '0.04em' }}>
-            {spot.locationLabel}
-          </p>
-          <p className="text-sm leading-snug mb-1" style={{ color: 'var(--text)', fontFamily: 'Noto Serif JP, serif', fontWeight: 300 }}>
-            {spot.name}
-          </p>
-          <p className="text-xs leading-relaxed line-clamp-2" style={{ color: 'var(--text-muted)', fontFamily: 'Noto Serif JP, serif', fontWeight: 300 }}>
-            {spot.excerpt}
-          </p>
+
+        {/* Card info */}
+        <div className="px-4 pt-3 pb-3 flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-xs mb-1 truncate" style={{ color: 'var(--accent)', fontFamily: 'Cormorant Garamond, serif', letterSpacing: '0.05em' }}>
+              {spot.locationLabel}
+            </p>
+            <p className="text-sm leading-snug font-light" style={{ color: 'var(--text)', fontFamily: 'Noto Serif JP, serif' }}>
+              {spot.name}
+            </p>
+          </div>
+          <span
+            className="shrink-0 text-xl leading-none mt-0.5 transition-transform duration-300"
+            style={{ color: 'var(--text-muted)', transform: isOpen ? 'rotate(90deg)' : 'none' }}
+          >
+            ›
+          </span>
         </div>
-        <span
-          className="shrink-0 self-center text-lg leading-none transition-transform duration-300"
-          style={{ color: 'var(--text-muted)', transform: isOpen ? 'rotate(90deg)' : 'none' }}
-        >
-          ›
-        </span>
       </button>
 
+      {/* Expanded content */}
       {isOpen && (
-        <div className="pb-5 px-1">
-          <div className="rounded overflow-hidden mb-4" style={{ aspectRatio: '16/9' }}>
-            <img src={spot.image} alt={spot.name} className="w-full h-full object-cover" style={{ filter: 'sepia(10%) saturate(80%)' }} />
-          </div>
-          {spot.year_abandoned && (
-            <p className="text-xs mb-3" style={{ color: 'var(--text-muted)', fontFamily: 'Cormorant Garamond, serif', letterSpacing: '0.1em' }}>
-              廃墟化: {spot.year_abandoned}年
-            </p>
-          )}
-          <p className="text-sm italic mb-4 leading-relaxed" style={{ color: 'var(--accent)', fontFamily: 'Cormorant Garamond, serif' }}>
+        <div className="px-4 pb-4">
+          {/* 複数写真ストリップ */}
+          <PhotoStrip images={spot.images} />
+
+          <p className="text-xs italic leading-relaxed mt-3 mb-3" style={{ color: 'var(--accent)', fontFamily: 'Cormorant Garamond, serif' }}>
             {spot.excerpt}
           </p>
-          <p className="text-sm leading-loose line-clamp-4" style={{ color: 'var(--text)', fontFamily: 'Noto Serif JP, serif', fontWeight: 300 }}>
+
+          <p className="text-xs leading-loose line-clamp-4" style={{ color: 'var(--text)', fontFamily: 'Noto Serif JP, serif', fontWeight: 300 }}>
             {spot.body.split('\n\n')[0]}
           </p>
-          <div className="flex flex-wrap gap-2 mt-4 mb-4">
+
+          <div className="flex flex-wrap gap-1.5 mt-3 mb-3">
             {spot.tags.map((tag) => (
-              <span key={tag} className="text-xs px-3 py-1 rounded-full" style={{ background: 'var(--border)', color: 'var(--text-muted)' }}>
+              <span key={tag} className="text-xs px-2.5 py-0.5 rounded-full" style={{ background: 'var(--border)', color: 'var(--text-muted)' }}>
                 {tag}
               </span>
             ))}
           </div>
+
           <Link
             href={`/articles/${spot.id}`}
             className="text-xs tracking-widest transition-opacity hover:opacity-60"
@@ -93,8 +114,7 @@ const ArticleList = forwardRef<ArticleListHandle, Props>(function ArticleList({ 
     scrollToRegion(regionKey: string) {
       const el = scrollRef.current?.querySelector(`[data-region="${regionKey}"]`) as HTMLElement | null;
       if (el && scrollRef.current) {
-        const offset = el.offsetTop - 16;
-        scrollRef.current.scrollTo({ top: offset, behavior: 'smooth' });
+        scrollRef.current.scrollTo({ top: el.offsetTop - 16, behavior: 'smooth' });
       }
     },
   }));
@@ -102,11 +122,11 @@ const ArticleList = forwardRef<ArticleListHandle, Props>(function ArticleList({ 
   return (
     <div className="flex flex-col h-full" style={{ background: 'var(--bg-sidebar)' }}>
       {/* Fixed header */}
-      <div className="shrink-0 px-7 pt-7 pb-5" style={{ borderBottom: '1px solid var(--border)' }}>
-        <p className="text-xs tracking-[0.3em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'Cormorant Garamond, serif' }}>
+      <div className="shrink-0 px-5 pt-5 pb-4" style={{ borderBottom: '1px solid var(--border)' }}>
+        <p className="text-xs tracking-[0.3em] mb-1.5" style={{ color: 'var(--accent)', fontFamily: 'Cormorant Garamond, serif' }}>
           ハイキャー
         </p>
-        <h1 className="text-2xl font-light leading-tight mb-2" style={{ fontFamily: 'Cormorant Garamond, serif', color: 'var(--text)' }}>
+        <h1 className="text-xl font-light leading-tight mb-1.5" style={{ fontFamily: 'Cormorant Garamond, serif', color: 'var(--text)' }}>
           廃墟・遺構を、地図でめぐる。
         </h1>
         <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)', fontFamily: 'Noto Serif JP, serif', fontWeight: 300 }}>
@@ -115,13 +135,13 @@ const ArticleList = forwardRef<ArticleListHandle, Props>(function ArticleList({ 
       </div>
 
       {/* Scrollable list */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-7 py-2">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3">
         {groups.map(({ regionKey, regionLabel, spots }) => (
-          <section key={regionKey} data-region={regionKey} className="mb-2">
-            {/* Region section header */}
+          <section key={regionKey} data-region={regionKey} className="mb-1">
+            {/* Region header */}
             <button
               onClick={() => onRegionClick(regionKey)}
-              className="w-full flex items-center gap-2 pt-4 pb-2 text-left group"
+              className="w-full flex items-center gap-2 py-2 text-left group"
             >
               <span
                 className="w-2 h-2 rounded-full shrink-0 transition-transform group-hover:scale-125"
@@ -137,33 +157,22 @@ const ArticleList = forwardRef<ArticleListHandle, Props>(function ArticleList({ 
               >
                 {regionLabel}
               </span>
-              <span className="text-xs ml-1" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>
+              <span className="text-xs" style={{ color: 'var(--text-muted)', opacity: 0.5 }}>
                 {spots.length}件
               </span>
             </button>
 
-            {/* Article cards in this region */}
-            <div
-              className="rounded-lg overflow-hidden px-3"
-              style={{
-                background: activeRegion === regionKey ? 'rgba(139,100,53,0.05)' : 'transparent',
-                border: activeRegion === regionKey ? '1px solid var(--border)' : '1px solid transparent',
-                transition: 'all 0.2s',
-              }}
-            >
-              {spots.map((spot) => (
-                <ArticleCard
-                  key={spot.id}
-                  spot={spot}
-                  isOpen={openSpotId === spot.id}
-                  onToggle={() => setOpenSpotId(openSpotId === spot.id ? null : spot.id)}
-                />
-              ))}
-            </div>
+            {spots.map((spot) => (
+              <ArticleCard
+                key={spot.id}
+                spot={spot}
+                isOpen={openSpotId === spot.id}
+                onToggle={() => setOpenSpotId(openSpotId === spot.id ? null : spot.id)}
+              />
+            ))}
           </section>
         ))}
-
-        <div className="h-8" />
+        <div className="h-6" />
       </div>
     </div>
   );

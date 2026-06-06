@@ -95,6 +95,17 @@ export default async function ArticlePage({ params }: { params: Params }) {
           ))}
         </div>
 
+        {/* Photo gallery */}
+        {spot.images.length > 1 && (
+          <div className="grid grid-cols-2 gap-2 mb-8">
+            {spot.images.slice(1).map((src, i) => (
+              <div key={i} className="rounded overflow-hidden" style={{ aspectRatio: '4/3' }}>
+                <img src={src} alt="" className="w-full h-full object-cover" style={{ filter: 'sepia(10%) saturate(80%)' }} />
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Lead */}
         <p
           className="text-lg md:text-xl leading-relaxed mb-8 italic"
