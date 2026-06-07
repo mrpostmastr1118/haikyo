@@ -5,9 +5,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const NAV = [
-  { href: '/',        label: 'Home' },
+  { href: '/',        label: '地図' },
+  { href: '/blog',    label: 'ブログ' },
+  { href: '/photos',  label: '写真' },
   { href: '/about',   label: 'About' },
-  { href: '/privacy', label: 'プライバシーポリシー' },
   { href: '/contact', label: 'お問い合わせ' },
 ];
 
@@ -27,6 +28,9 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
+  const isActive = (href: string) =>
+    href === '/' ? pathname === '/' : pathname.startsWith(href);
+
   return (
     <>
       <header
@@ -36,7 +40,7 @@ export default function Header() {
         {/* Logo */}
         <Link
           href="/"
-          className="text-sm tracking-[0.3em] font-light"
+          className="text-sm tracking-[0.3em] font-light shrink-0"
           style={{ color: 'var(--accent)', fontFamily: 'Cormorant Garamond, serif' }}
           onClick={() => setOpen(false)}
         >
@@ -61,9 +65,9 @@ export default function Header() {
               href={item.href}
               className="text-xs transition-opacity hover:opacity-60"
               style={{
-                color: pathname === item.href ? 'var(--accent)' : 'var(--text-muted)',
+                color: isActive(item.href) ? 'var(--accent)' : 'var(--text-muted)',
                 fontFamily: 'Noto Serif JP, serif',
-                fontWeight: pathname === item.href ? 400 : 300,
+                fontWeight: isActive(item.href) ? 400 : 300,
                 letterSpacing: '0.05em',
               }}
             >
@@ -96,7 +100,12 @@ export default function Header() {
               href={item.href}
               onClick={() => setOpen(false)}
               className="px-6 py-4 text-sm border-b transition-opacity hover:opacity-60"
-              style={{ color: pathname === item.href ? 'var(--accent)' : 'var(--text)', fontFamily: 'Noto Serif JP, serif', fontWeight: 300, borderColor: 'var(--border)' }}
+              style={{
+                color: isActive(item.href) ? 'var(--accent)' : 'var(--text)',
+                fontFamily: 'Noto Serif JP, serif',
+                fontWeight: isActive(item.href) ? 400 : 300,
+                borderColor: 'var(--border)',
+              }}
             >
               {item.label}
             </Link>
