@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { ARTICLE_REGION_KEYS } from '@/lib/spots';
+import { VEHICLES, positionAt, headingAt } from '@/lib/vehicles';
 import 'leaflet/dist/leaflet.css';
 
 interface Props {
@@ -123,6 +124,61 @@ export default function MapView({ activeRegion, onRegionClick, regionKeys = ARTI
 
       ro = new ResizeObserver(() => map.invalidateSize());
       ro.observe(containerRef.current!);
+
+      // ── アニメーション車両 ─────────────────────
+      const vehicles = VEHICLES.map((v) => ({ ...v, progress: v.offset }));
+      const vehicleMarkers = new Map<string, ReturnType<typeof L.marker>>();
+
+      vehicles.forEach((v) => {
+        const pos = positionAt(v.waypoints, v.progress);
+        const icon = L.divIcon({
+          className: '',
+          html: `<div style="font-size:${v.type === 'plane' ? 18 : 22}px;line-height:1;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.4));transform:rotate(0deg);transform-origin:center;">
+                   ${v.type === 'plane' ? '✈️' : '🚢'}
+                 </div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        });
+        const marker = L.marker(pos, { icon, interactive: false, zIndexOffset: -1000 }).addTo(map);
+        vehicleMarkers.set(v.id, marker);
+      });
+
+      let lastTime = performance.now();
+      let rafId: number;
+
+      function tick(now: number) {
+        const dt = (now - lastTime) / 1000;
+        lastTime = now;
+
+        vehicles.forEach((v) => {
+          v.progress = ((v.progress + dt / v.speed) % 1 + 1) % 1;
+          const pos = positionAt(v.waypoints, v.progress);
+          const heading = headingAt(v.waypoints, v.progress);
+          const marker = vehicleMarkers.get(v.id);
+          if (!marker) return;
+          marker.setLatLng(pos);
+          const el = marker.getElement();
+          if (el) {
+            const inner = el.querySelector('div') as HTMLElement | null;
+            if (inner) {
+              // 飛行機は方位角で回転、船は横方向のみ
+              const rot = v.type === 'plane' ? heading - 45 : (heading > 0 ? 0 : 180);
+              inner.style.transform = `rotate(${rot}deg)`;
+            }
+          }
+        });
+
+        rafId = requestAnimationFrame(tick);
+      }
+
+      rafId = requestAnimationFrame(tick);
+
+      // クリーンアップ登録
+      const origReturn = () => {
+        cancelAnimationFrame(rafId);
+        vehicleMarkers.forEach((m) => m.remove());
+      };
+      (containerRef.current as HTMLElement & { _vehicleCleanup?: () => void })._vehicleCleanup = origReturn;
     }
 
     init();
@@ -130,6 +186,7 @@ export default function MapView({ activeRegion, onRegionClick, regionKeys = ARTI
     return () => {
       cancelled = true;
       ro?.disconnect();
+      (containerRef.current as HTMLElement & { _vehicleCleanup?: () => void })?._vehicleCleanup?.();
       mapRef.current?.remove();
       mapRef.current = null;
       worldLayerRef.current = null;
