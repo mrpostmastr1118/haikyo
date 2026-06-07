@@ -11,6 +11,18 @@ const NAV = [
   { href: '/contact', label: 'お問い合わせ' },
 ];
 
+const INSTAGRAM_URL = 'https://www.instagram.com/postmaster0517/?hl=ja';
+
+function InstagramIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+      <circle cx="12" cy="12" r="4"/>
+      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+    </svg>
+  );
+}
+
 export default function Header() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
@@ -32,7 +44,17 @@ export default function Header() {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden md:flex items-center gap-5">
+          <a
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-opacity hover:opacity-60"
+            style={{ color: 'var(--text-muted)' }}
+            aria-label="Instagram"
+          >
+            <InstagramIcon size={18} />
+          </a>
           {NAV.map((item) => (
             <Link
               key={item.href}
@@ -56,27 +78,9 @@ export default function Header() {
           onClick={() => setOpen(!open)}
           aria-label="メニュー"
         >
-          <span
-            className="block w-5 h-px transition-all duration-200"
-            style={{
-              background: 'var(--text-muted)',
-              transform: open ? 'translateY(5px) rotate(45deg)' : 'none',
-            }}
-          />
-          <span
-            className="block w-5 h-px transition-all duration-200"
-            style={{
-              background: 'var(--text-muted)',
-              opacity: open ? 0 : 1,
-            }}
-          />
-          <span
-            className="block w-5 h-px transition-all duration-200"
-            style={{
-              background: 'var(--text-muted)',
-              transform: open ? 'translateY(-5px) rotate(-45deg)' : 'none',
-            }}
-          />
+          <span className="block w-5 h-px transition-all duration-200" style={{ background: 'var(--text-muted)', transform: open ? 'translateY(5px) rotate(45deg)' : 'none' }} />
+          <span className="block w-5 h-px transition-all duration-200" style={{ background: 'var(--text-muted)', opacity: open ? 0 : 1 }} />
+          <span className="block w-5 h-px transition-all duration-200" style={{ background: 'var(--text-muted)', transform: open ? 'translateY(-5px) rotate(-45deg)' : 'none' }} />
         </button>
       </header>
 
@@ -92,16 +96,22 @@ export default function Header() {
               href={item.href}
               onClick={() => setOpen(false)}
               className="px-6 py-4 text-sm border-b transition-opacity hover:opacity-60"
-              style={{
-                color: pathname === item.href ? 'var(--accent)' : 'var(--text)',
-                fontFamily: 'Noto Serif JP, serif',
-                fontWeight: 300,
-                borderColor: 'var(--border)',
-              }}
+              style={{ color: pathname === item.href ? 'var(--accent)' : 'var(--text)', fontFamily: 'Noto Serif JP, serif', fontWeight: 300, borderColor: 'var(--border)' }}
             >
               {item.label}
             </Link>
           ))}
+          <a
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setOpen(false)}
+            className="px-6 py-4 text-sm flex items-center gap-2 transition-opacity hover:opacity-60"
+            style={{ color: 'var(--text)', fontFamily: 'Noto Serif JP, serif', fontWeight: 300 }}
+          >
+            <InstagramIcon size={16} />
+            Instagram
+          </a>
         </div>
       )}
     </>
