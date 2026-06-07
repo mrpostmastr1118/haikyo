@@ -52,6 +52,9 @@ export default function AdminArticlesPage() {
               <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${spot.published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                 {spot.published ? '公開中' : '非公開'}
               </span>
+              <Link href={`/admin/articles/${spot.id}/edit`} className="text-xs text-amber-600 hover:text-amber-800 shrink-0">
+                編集
+              </Link>
               <button
                 onClick={() => deleteSpot(spot.id)}
                 className="text-xs text-red-400 hover:text-red-600 shrink-0"

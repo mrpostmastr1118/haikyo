@@ -40,6 +40,8 @@ export default function MapView({ activeRegion, onRegionClick, regionKeys = ARTI
   const japanLayerRef = useRef<AnyGeoJSON | null>(null);
   const activeRegionRef = useRef(activeRegion);
   activeRegionRef.current = activeRegion;
+  const regionKeysRef = useRef(regionKeys);
+  regionKeysRef.current = regionKeys;
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -86,14 +88,15 @@ export default function MapView({ activeRegion, onRegionClick, regionKeys = ARTI
           typed.on({
             mouseover(e: { target: AnyLayer }) {
               if (key !== activeRegionRef.current) {
-                e.target.setStyle(hasArticle ? COLORS.hover : COLORS.neutral);
+                const ha = regionKeysRef.current.has(key);
+                e.target.setStyle(ha ? COLORS.hover : COLORS.neutral);
               }
             },
             mouseout(e: { target: AnyLayer }) {
-              e.target.setStyle(styleFor(key, activeRegionRef.current, regionKeys));
+              e.target.setStyle(styleFor(key, activeRegionRef.current, regionKeysRef.current));
             },
             click() {
-              if (hasArticle) onRegionClick(key);
+              if (regionKeysRef.current.has(key)) onRegionClick(key);
             },
           });
         });
@@ -150,7 +153,7 @@ export default function MapView({ activeRegion, onRegionClick, regionKeys = ARTI
     }
     restyle(worldLayerRef.current, (f) => (f.properties as Record<string, string>).ADM0_A3);
     restyle(japanLayerRef.current, (f) => (f.properties as Record<string, string>).nam_ja);
-  }, [activeRegion]);
+  }, [activeRegion, regionKeys]);
 
   return <div ref={containerRef} className="w-full h-full" />;
 }
