@@ -1,7 +1,7 @@
 import PageLayout from '@/components/PageLayout';
 
 export const metadata = {
-  title: 'プライバシーポリシー — ハイキャー',
+  title: 'プライバシーポリシー — 不思議な空間をまとめているブログ',
 };
 
 export default function PrivacyPage() {
@@ -13,7 +13,7 @@ export default function PrivacyPage() {
         1. 基本方針
       </h2>
       <p>
-        ハイキャー（以下「当サイト」）は、利用者の個人情報の保護を重要な責務と認識し、適切な管理・利用に努めます。
+        不思議な空間をまとめているブログ（以下「当サイト」）は、利用者の個人情報の保護を重要な責務と認識し、適切な管理・利用に努めます。
       </p>
 
       <h2 className="text-base pt-2" style={{ fontWeight: 400, fontFamily: 'Cormorant Garamond, serif', fontSize: '1.1rem' }}>

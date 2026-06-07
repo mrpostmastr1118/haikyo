@@ -1,14 +1,14 @@
 import PageLayout from '@/components/PageLayout';
 
 export const metadata = {
-  title: 'About — ハイキャー',
+  title: 'About — 不思議な空間をまとめているブログ',
 };
 
 export default function AboutPage() {
   return (
-    <PageLayout title="このサイトについて" subtitle="About ハイキャー">
+    <PageLayout title="このサイトについて" subtitle="About 不思議な空間をまとめているブログ">
       <p>
-        ハイキャーは、廃墟・廃村・遺構・古城といった「時の痕跡」を持つ場所を、地図を通じて記録するトラベルログです。
+        不思議な空間をまとめているブログは、廃墟・廃村・遺構・古城といった「時の痕跡」を持つ場所を、地図を通じて記録するトラベルログです。
       </p>
       <p>
         このサイトが伝えたいのは、「怖さ」でも「危険さ」でもありません。人が去り、自然が戻り、時間が堆積した場所に宿る——静けさ、神聖さ、未知への問い。そういった感覚を共有したいと思っています。

@@ -121,7 +121,7 @@ const ArticleList = forwardRef<ArticleListHandle, Props>(function ArticleList({ 
       {/* Fixed header */}
       <div className="shrink-0 px-5 pt-5 pb-4" style={{ borderBottom: '1px solid var(--border)' }}>
         <p className="text-xs tracking-[0.3em] mb-1.5" style={{ color: 'var(--accent)', fontFamily: 'Cormorant Garamond, serif' }}>
-          ハイキャー
+          不思議な空間をまとめているブログ
         </p>
         <h1 className="text-xl font-light leading-tight mb-1.5" style={{ fontFamily: 'Cormorant Garamond, serif', color: 'var(--text)' }}>
           廃墟・遺構を、地図でめぐる。

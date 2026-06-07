@@ -28,7 +28,7 @@ export default function Header() {
           style={{ color: 'var(--accent)', fontFamily: 'Cormorant Garamond, serif' }}
           onClick={() => setOpen(false)}
         >
-          ハイキャー
+          不思議な空間をまとめているブログ
         </Link>
 
         {/* Desktop nav */}

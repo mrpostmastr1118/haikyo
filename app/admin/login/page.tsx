@@ -31,7 +31,7 @@ export default function LoginPage() {
     <div className="min-h-full flex items-center justify-center" style={{ background: 'var(--bg)' }}>
       <div className="w-full max-w-sm px-8 py-10 rounded-lg" style={{ background: 'var(--bg-sidebar)', border: '1px solid var(--border)' }}>
         <p className="text-xs tracking-[0.3em] mb-6 text-center" style={{ color: 'var(--accent)', fontFamily: 'Cormorant Garamond, serif' }}>
-          ハイキャー 管理画面
+          不思議な空間をまとめているブログ 管理画面
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
