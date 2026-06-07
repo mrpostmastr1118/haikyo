@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Header from '@/components/Header';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
+import Script from 'next/script';
 import { SITE_NAME, SITE_DESCRIPTION, SITE_URL } from '@/lib/site';
 import './globals.css';
 
@@ -39,6 +40,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="flex flex-col h-full">
         {gaId && <GoogleAnalytics gaId={gaId} />}
+        {process.env.NEXT_PUBLIC_ADSENSE_ID && (
+          <Script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_ID}`}
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
+        )}
         <Header />
         <main className="flex-1 min-h-0 overflow-hidden relative">
           {children}

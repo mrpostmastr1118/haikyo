@@ -1,11 +1,54 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { SPOTS } from '@/lib/spots';
+import { SPOTS, dbSpotToSpot, type Spot } from '@/lib/spots';
+import { supabase } from '@/lib/supabase';
 import { SITE_URL } from '@/lib/site';
 import ShareButtons from '@/components/ShareButtons';
 import ImageCarousel from '@/components/ImageCarousel';
+import AdSense from '@/components/AdSense';
 import { Block } from '@/components/BlockEditor';
+
+export const dynamic = 'force-dynamic'; // DB記事を動的にレンダリング
+
+async function getSpot(slug: string): Promise<Spot | null> {
+  // まず静的データを確認
+  const static_ = SPOTS.find((s) => s.id === slug);
+  if (static_) return static_;
+  // DBから取得
+  const { data } = await supabase.from('spots').select('*').eq('id', slug).eq('published', true).single();
+  if (!data) return null;
+  return dbSpotToSpot(data);
+}
+
+async function getRelated(spot: Spot): Promise<Spot[]> {
+  // 同地域 or 同タグ の記事を最大4件取得
+  const { data } = await supabase
+    .from('spots')
+    .select('*')
+    .eq('published', true)
+    .eq('region_key', spot.regionKey)
+    .neq('id', spot.id)
+    .limit(4);
+  const related = (data ?? []).map(dbSpotToSpot);
+  // 同地域が足りなければタグで補完
+  if (related.length < 2 && spot.tags.length > 0) {
+    const { data: byTag } = await supabase
+      .from('spots')
+      .select('*')
+      .eq('published', true)
+      .contains('tags', spot.tags.slice(0, 1))
+      .neq('id', spot.id)
+      .limit(4);
+    const byTagSpots = (byTag ?? []).map(dbSpotToSpot);
+    const existing = new Set(related.map((s) => s.id));
+    for (const s of byTagSpots) {
+      if (!existing.has(s.id)) { related.push(s); existing.add(s.id); }
+      if (related.length >= 4) break;
+    }
+  }
+  return related.slice(0, 4);
+}
 
 function renderBody(body: string) {
   try {
@@ -14,107 +57,64 @@ function renderBody(body: string) {
       return (
         <div className="space-y-5">
           {blocks.map((block, i) => {
-            if (block.type === 'text') {
-              return (
-                <p key={i} className="text-sm leading-loose" style={{ color: 'var(--text)', fontFamily: 'Noto Serif JP, serif', fontWeight: 300, whiteSpace: 'pre-wrap' }}>
-                  {block.content}
-                </p>
-              );
-            }
-            if (block.type === 'image') {
-              return (
-                <figure key={i} className="my-6">
-                  <img src={block.url} alt={block.caption || ''} className="w-full rounded-lg object-cover" style={{ maxHeight: '480px', filter: 'sepia(8%) saturate(85%)' }} />
-                  {block.caption && (
-                    <figcaption className="text-center text-xs mt-2" style={{ color: 'var(--text-muted)', fontFamily: 'Noto Serif JP, serif', fontWeight: 300 }}>
-                      {block.caption}
-                    </figcaption>
-                  )}
-                </figure>
-              );
-            }
+            if (block.type === 'text') return (
+              <p key={i} className="text-sm leading-loose" style={{ color: 'var(--text)', fontFamily: 'Noto Serif JP, serif', fontWeight: 300, whiteSpace: 'pre-wrap' }}>
+                {block.content}
+              </p>
+            );
+            if (block.type === 'image') return (
+              <figure key={i} className="my-6">
+                <img src={block.url} alt={block.caption || ''} className="w-full rounded-lg object-cover" style={{ maxHeight: '480px', filter: 'sepia(8%) saturate(85%)' }} />
+                {block.caption && <figcaption className="text-center text-xs mt-2" style={{ color: 'var(--text-muted)', fontFamily: 'Noto Serif JP, serif', fontWeight: 300 }}>{block.caption}</figcaption>}
+              </figure>
+            );
             return null;
           })}
         </div>
       );
     }
   } catch {}
-  // fallback: 既存のプレーンテキスト
-  return (
-    <p className="text-sm leading-loose" style={{ color: 'var(--text)', fontFamily: 'Noto Serif JP, serif', fontWeight: 300, whiteSpace: 'pre-line' }}>
-      {body}
-    </p>
-  );
+  return <p className="text-sm leading-loose" style={{ color: 'var(--text)', fontFamily: 'Noto Serif JP, serif', fontWeight: 300, whiteSpace: 'pre-line' }}>{body}</p>;
 }
 
 type Params = Promise<{ slug: string }>;
 
-export function generateStaticParams() {
-  return SPOTS.map((spot) => ({ slug: spot.id }));
-}
-
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { slug } = await params;
-  const spot = SPOTS.find((s) => s.id === slug);
+  const spot = await getSpot(slug);
   if (!spot) return {};
-
   const url = `${SITE_URL}/articles/${spot.id}`;
-
   return {
     title: spot.name,
     description: spot.excerpt,
-    openGraph: {
-      title: spot.name,
-      description: spot.excerpt,
-      url,
-      type: 'article',
-      images: [{ url: spot.image, width: 1200, height: 630, alt: spot.name }],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: spot.name,
-      description: spot.excerpt,
-      images: [spot.image],
-    },
+    openGraph: { title: spot.name, description: spot.excerpt, url, type: 'article', images: [{ url: spot.image, width: 1200, height: 630, alt: spot.name }] },
+    twitter: { card: 'summary_large_image', title: spot.name, description: spot.excerpt, images: [spot.image] },
     alternates: { canonical: url },
   };
 }
 
 export default async function ArticlePage({ params }: { params: Params }) {
   const { slug } = await params;
-  const spot = SPOTS.find((s) => s.id === slug);
+  const spot = await getSpot(slug);
   if (!spot) notFound();
 
+  const [related] = await Promise.all([getRelated(spot)]);
   const url = `${SITE_URL}/articles/${spot.id}`;
-  const others = SPOTS.filter((s) => s.regionKey === spot.regionKey && s.id !== spot.id);
 
   return (
     <div className="h-full overflow-y-auto" style={{ background: 'var(--bg)' }}>
       {/* Hero carousel */}
       <div className="relative w-full" style={{ maxHeight: '480px', overflow: 'hidden' }}>
         <ImageCarousel images={spot.images} alt={spot.name} aspectRatio="16/7" interval={5000} />
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: 'linear-gradient(to bottom, transparent 40%, rgba(44,36,23,0.65))' }}
-        />
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, transparent 40%, rgba(44,36,23,0.65))' }} />
         <div className="absolute bottom-0 left-0 right-0 px-6 md:px-16 pb-8 pointer-events-none">
-          <p className="text-xs tracking-widest mb-2" style={{ color: 'rgba(250,247,242,0.8)', fontFamily: 'Cormorant Garamond, serif' }}>
-            {spot.locationLabel}
-          </p>
-          <h1 className="text-3xl md:text-5xl font-light text-white leading-tight" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-            {spot.name}
-          </h1>
+          <p className="text-xs tracking-widest mb-2" style={{ color: 'rgba(250,247,242,0.8)', fontFamily: 'Cormorant Garamond, serif' }}>{spot.locationLabel}</p>
+          <h1 className="text-3xl md:text-5xl font-light text-white leading-tight" style={{ fontFamily: 'Cormorant Garamond, serif' }}>{spot.name}</h1>
         </div>
       </div>
 
-      {/* Content */}
       <div className="max-w-2xl mx-auto px-6 md:px-8 py-10">
-        {/* Back link */}
-        <Link
-          href="/"
-          className="text-xs tracking-widest mb-8 inline-block transition-opacity hover:opacity-60"
-          style={{ color: 'var(--text-muted)', fontFamily: 'Cormorant Garamond, serif' }}
-        >
+        <Link href="/" className="text-xs tracking-widest mb-8 inline-block transition-opacity hover:opacity-60" style={{ color: 'var(--text-muted)', fontFamily: 'Cormorant Garamond, serif' }}>
           ← 地図に戻る
         </Link>
 
@@ -126,9 +126,7 @@ export default async function ArticlePage({ params }: { params: Params }) {
             </span>
           )}
           {spot.tags.map((tag) => (
-            <span key={tag} className="text-xs px-3 py-1 rounded-full" style={{ background: 'var(--border)', color: 'var(--text-muted)', fontFamily: 'Noto Serif JP, serif' }}>
-              {tag}
-            </span>
+            <span key={tag} className="text-xs px-3 py-1 rounded-full" style={{ background: 'var(--border)', color: 'var(--text-muted)', fontFamily: 'Noto Serif JP, serif' }}>{tag}</span>
           ))}
         </div>
 
@@ -144,47 +142,38 @@ export default async function ArticlePage({ params }: { params: Params }) {
         )}
 
         {/* Lead */}
-        <p
-          className="text-lg md:text-xl leading-relaxed mb-8 italic"
-          style={{ color: 'var(--accent)', fontFamily: 'Cormorant Garamond, serif' }}
-        >
+        <p className="text-lg md:text-xl leading-relaxed mb-8 italic" style={{ color: 'var(--accent)', fontFamily: 'Cormorant Garamond, serif' }}>
           {spot.excerpt}
         </p>
 
-        {/* Divider */}
         <div className="mb-8" style={{ borderTop: '1px solid var(--border)' }} />
 
         {/* Body */}
         {renderBody(spot.body)}
 
+        {/* Ad: 記事とシェアボタンの間 */}
+        <AdSense slot="XXXXXXXXXX" style={{ margin: '40px 0 0' }} />
+
         {/* Share */}
-        <div className="mt-12 pt-8" style={{ borderTop: '1px solid var(--border)' }}>
-          <p className="text-xs tracking-widest mb-4" style={{ color: 'var(--text-muted)', fontFamily: 'Cormorant Garamond, serif' }}>
-            SHARE
-          </p>
+        <div className="mt-8 pt-8" style={{ borderTop: '1px solid var(--border)' }}>
+          <p className="text-xs tracking-widest mb-4" style={{ color: 'var(--text-muted)', fontFamily: 'Cormorant Garamond, serif' }}>SHARE</p>
           <ShareButtons url={url} title={spot.name} />
         </div>
 
-        {/* Related articles in same region */}
-        {others.length > 0 && (
+        {/* Related articles */}
+        {related.length > 0 && (
           <div className="mt-12 pt-8" style={{ borderTop: '1px solid var(--border)' }}>
             <p className="text-xs tracking-widest mb-6" style={{ color: 'var(--text-muted)', fontFamily: 'Cormorant Garamond, serif' }}>
-              同じ地域の記録
+              関連記事
             </p>
-            <div className="flex flex-col gap-4">
-              {others.map((s) => (
-                <Link
-                  key={s.id}
-                  href={`/articles/${s.id}`}
-                  className="flex gap-4 group"
-                >
-                  <div className="w-20 h-16 shrink-0 rounded overflow-hidden">
-                    <img src={s.image} alt={s.name} className="w-full h-full object-cover transition-opacity group-hover:opacity-80" style={{ filter: 'sepia(15%) saturate(80%)' }} />
+            <div className="grid grid-cols-2 gap-4">
+              {related.map((s) => (
+                <Link key={s.id} href={`/articles/${s.id}`} className="group">
+                  <div className="rounded-lg overflow-hidden mb-2" style={{ aspectRatio: '4/3' }}>
+                    <img src={s.image} alt={s.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" style={{ filter: 'sepia(12%) saturate(80%)' }} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs mb-1" style={{ color: 'var(--accent)', fontFamily: 'Cormorant Garamond, serif' }}>{s.locationLabel}</p>
-                    <p className="text-sm leading-snug" style={{ color: 'var(--text)', fontFamily: 'Noto Serif JP, serif', fontWeight: 300 }}>{s.name}</p>
-                  </div>
+                  <p className="text-xs mb-0.5" style={{ color: 'var(--accent)', fontFamily: 'Cormorant Garamond, serif' }}>{s.locationLabel}</p>
+                  <p className="text-sm leading-snug" style={{ color: 'var(--text)', fontFamily: 'Noto Serif JP, serif', fontWeight: 300 }}>{s.name}</p>
                 </Link>
               ))}
             </div>
@@ -192,11 +181,7 @@ export default async function ArticlePage({ params }: { params: Params }) {
         )}
 
         <div className="mt-12">
-          <Link
-            href="/"
-            className="text-xs tracking-widest transition-opacity hover:opacity-60"
-            style={{ color: 'var(--text-muted)', fontFamily: 'Cormorant Garamond, serif' }}
-          >
+          <Link href="/" className="text-xs tracking-widest transition-opacity hover:opacity-60" style={{ color: 'var(--text-muted)', fontFamily: 'Cormorant Garamond, serif' }}>
             ← 地図に戻る
           </Link>
         </div>
