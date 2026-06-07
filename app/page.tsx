@@ -1,10 +1,11 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 import ArticleList, { ArticleListHandle } from '@/components/ArticleList';
 import BlogView from '@/components/BlogView';
-import { SPOTS, dbSpotToSpot, getArticleRegionKeys, type Spot } from '@/lib/spots';
+import BottomSheet from '@/components/BottomSheet';
+import { SPOTS, dbSpotToSpot, getArticleRegionKeys, getRegionGroups, type Spot } from '@/lib/spots';
 import { supabase } from '@/lib/supabase';
 
 const MapView = dynamic(() => import('@/components/MapView'), {
@@ -19,7 +20,6 @@ const MapView = dynamic(() => import('@/components/MapView'), {
 });
 
 type ViewMode = 'map' | 'blog';
-type MobileTab = 'map' | 'list';
 
 const VIEW_TOGGLE: { mode: ViewMode; label: string; icon: string }[] = [
   { mode: 'map',  label: '地図', icon: '🗺' },
@@ -29,7 +29,6 @@ const VIEW_TOGGLE: { mode: ViewMode; label: string; icon: string }[] = [
 export default function Home() {
   const [viewMode, setViewMode] = useState<ViewMode>('map');
   const [activeRegion, setActiveRegion] = useState<string | null>(null);
-  const [mobileTab, setMobileTab] = useState<MobileTab>('list');
   const [allSpots, setAllSpots] = useState<Spot[]>(SPOTS);
   const listRef = useRef<ArticleListHandle>(null);
 
@@ -49,10 +48,26 @@ export default function Home() {
 
   const regionKeys = getArticleRegionKeys(allSpots);
 
-  function handleRegionClick(regionKey: string) {
+  // モバイルのボトムシート用
+  const bottomSheetSpots = useMemo(() => {
+    if (!activeRegion) return [];
+    return allSpots.filter((s) => s.regionKey === activeRegion);
+  }, [activeRegion, allSpots]);
+
+  const bottomSheetLabel = useMemo(() => {
+    if (!activeRegion) return '';
+    return allSpots.find((s) => s.regionKey === activeRegion)?.regionLabel ?? activeRegion;
+  }, [activeRegion, allSpots]);
+
+  // デスクトップ：地図クリック → 右パネルスクロール
+  function handleRegionClickDesktop(regionKey: string) {
     setActiveRegion(regionKey);
-    setMobileTab('list');
     setTimeout(() => listRef.current?.scrollToRegion(regionKey), 50);
+  }
+
+  // モバイル：地図クリック → ボトムシート
+  function handleRegionClickMobile(regionKey: string) {
+    setActiveRegion(regionKey);
   }
 
   return (
@@ -62,15 +77,11 @@ export default function Home() {
         className="shrink-0 flex items-center justify-between px-4 md:px-6 py-2"
         style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-sidebar)' }}
       >
-        {/* Desktop: view switcher (pill) */}
-        <div
-          className="flex rounded-full p-0.5"
-          style={{ background: 'var(--border)' }}
-        >
+        <div className="flex rounded-full p-0.5" style={{ background: 'var(--border)' }}>
           {VIEW_TOGGLE.map(({ mode, label, icon }) => (
             <button
               key={mode}
-              onClick={() => setViewMode(mode)}
+              onClick={() => { setViewMode(mode); setActiveRegion(null); }}
               className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs transition-all"
               style={{
                 background: viewMode === mode ? 'var(--bg-sidebar)' : 'transparent',
@@ -85,7 +96,6 @@ export default function Home() {
             </button>
           ))}
         </div>
-
         <p className="text-xs hidden md:block" style={{ color: 'var(--text-muted)', fontFamily: 'Noto Serif JP, serif', fontWeight: 300 }}>
           {allSpots.length} 件の記録
         </p>
@@ -100,40 +110,47 @@ export default function Home() {
 
       {/* Map view */}
       {viewMode === 'map' && (
-        <>
-          {/* Mobile tab bar */}
-          <div
-            className="md:hidden flex shrink-0 text-xs"
-            style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-sidebar)' }}
-          >
-            {(['map', 'list'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setMobileTab(tab)}
-                className="flex-1 py-3 tracking-widest transition-colors"
-                style={{
-                  color: mobileTab === tab ? 'var(--accent)' : 'var(--text-muted)',
-                  fontFamily: 'Cormorant Garamond, serif',
-                  borderBottom: mobileTab === tab ? '2px solid var(--accent)' : '2px solid transparent',
-                }}
-              >
-                {tab === 'map' ? '地　図' : '記　事'}
-              </button>
-            ))}
+        <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
+
+          {/* ── Mobile: map full screen + bottom sheet ── */}
+          <div className="md:hidden flex-1 relative">
+            <MapView
+              activeRegion={activeRegion}
+              onRegionClick={handleRegionClickMobile}
+              regionKeys={regionKeys}
+            />
+            {activeRegion && bottomSheetSpots.length > 0 && (
+              <BottomSheet
+                spots={bottomSheetSpots}
+                regionLabel={bottomSheetLabel}
+                onClose={() => setActiveRegion(null)}
+              />
+            )}
           </div>
 
-          <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
-            <div className={`relative min-w-0 md:flex-1 ${mobileTab === 'map' ? 'flex-1' : 'hidden md:block'}`}>
-              <MapView activeRegion={activeRegion} onRegionClick={handleRegionClick} regionKeys={regionKeys} />
+          {/* ── Desktop: map + sidebar ── */}
+          <div className="hidden md:flex flex-1 overflow-hidden min-h-0">
+            <div className="flex-1 relative min-w-0">
+              <MapView
+                activeRegion={activeRegion}
+                onRegionClick={handleRegionClickDesktop}
+                regionKeys={regionKeys}
+              />
             </div>
             <div
-              className={`md:w-[390px] md:shrink-0 ${mobileTab === 'list' ? 'flex-1 overflow-hidden' : 'hidden md:block'}`}
+              className="w-[390px] shrink-0"
               style={{ borderLeft: '1px solid var(--border)' }}
             >
-              <ArticleList ref={listRef} activeRegion={activeRegion} onRegionClick={handleRegionClick} allSpots={allSpots} />
+              <ArticleList
+                ref={listRef}
+                activeRegion={activeRegion}
+                onRegionClick={handleRegionClickDesktop}
+                allSpots={allSpots}
+              />
             </div>
           </div>
-        </>
+
+        </div>
       )}
     </div>
   );
