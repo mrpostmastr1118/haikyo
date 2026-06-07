@@ -64,7 +64,7 @@ export default function ImageDropZone({ onFiles, multiple = true, label, compact
       <input
         ref={fileRef}
         type="file"
-        accept="image/*"
+        accept="image/*,.heic,.heif"
         multiple={multiple}
         style={{ display: 'none' }}
         onChange={(e) => {
