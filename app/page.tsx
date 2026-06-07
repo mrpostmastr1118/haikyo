@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useRef, useState, useEffect, useMemo } from 'react';
+import { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import ArticleList, { ArticleListHandle } from '@/components/ArticleList';
 import BlogView from '@/components/BlogView';
 import PhotoView from '@/components/PhotoView';
@@ -30,6 +30,20 @@ const VIEW_TOGGLE: { mode: ViewMode; label: string; icon: string }[] = [
 
 export default function Home() {
   const [viewMode, setViewMode] = useState<ViewMode>('map');
+
+  // URLからタブ状態を初期化（戻るボタンで写真タブに戻れる）
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const v = params.get('view') as ViewMode | null;
+    if (v && ['map', 'blog', 'photo'].includes(v)) setViewMode(v);
+  }, []);
+
+  const changeView = useCallback((mode: ViewMode) => {
+    setViewMode(mode);
+    setActiveRegion(null);
+    const url = mode === 'map' ? '/' : `/?view=${mode}`;
+    window.history.pushState(null, '', url);
+  }, []);
   const [activeRegion, setActiveRegion] = useState<string | null>(null);
   const [allSpots, setAllSpots] = useState<Spot[]>(SPOTS);
   const listRef = useRef<ArticleListHandle>(null);
@@ -83,7 +97,7 @@ export default function Home() {
           {VIEW_TOGGLE.map(({ mode, label, icon }) => (
             <button
               key={mode}
-              onClick={() => { setViewMode(mode); setActiveRegion(null); }}
+              onClick={() => changeView(mode)}
               className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs transition-all"
               style={{
                 background: viewMode === mode ? 'var(--bg-sidebar)' : 'transparent',

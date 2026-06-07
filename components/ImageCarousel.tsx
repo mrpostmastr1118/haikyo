@@ -6,11 +6,12 @@ interface Props {
   images: string[];
   alt?: string;
   aspectRatio?: string;
-  interval?: number; // ms
+  interval?: number;
+  initialIndex?: number;
 }
 
-export default function ImageCarousel({ images, alt = '', aspectRatio = '3/2', interval = 4000 }: Props) {
-  const [current, setCurrent] = useState(0);
+export default function ImageCarousel({ images, alt = '', aspectRatio = '3/2', interval = 4000, initialIndex = 0 }: Props) {
+  const [current, setCurrent] = useState(initialIndex);
   const [paused, setPaused] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
