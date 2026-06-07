@@ -19,6 +19,8 @@ export interface Spot {
 }
 
 export const SPOTS: Spot[] = [
+  // サンプルデータを削除しました。記事は管理画面から追加してください。
+  /*
   {
     id: 'gunkanjima',
     name: '時の孤島、軍艦島',
@@ -145,6 +147,7 @@ export const SPOTS: Spot[] = [
     tags: ['廃城', '苔', '中世遺構'],
     publishedAt: '2026-03-08',
   },
+  */
 ];
 
 import type { DbSpot } from './supabase';
