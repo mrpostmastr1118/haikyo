@@ -152,7 +152,7 @@ export default async function ArticlePage({ params }: { params: Params }) {
         {renderBody(spot.body)}
 
         {/* Ad: 記事とシェアボタンの間 */}
-        <AdSense slot="XXXXXXXXXX" style={{ margin: '40px 0 0' }} />
+        <AdSense slot="6602463175" style={{ margin: '40px 0 0' }} />
 
         {/* Share */}
         <div className="mt-8 pt-8" style={{ borderTop: '1px solid var(--border)' }}>
