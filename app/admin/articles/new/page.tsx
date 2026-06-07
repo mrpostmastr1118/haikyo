@@ -70,8 +70,9 @@ export default function NewArticlePage() {
       const fd = new FormData();
       fd.append('file', file);
       const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
-      if (!res.ok) { setError('写真のアップロードに失敗しました'); setUploading(false); return; }
-      const { url } = await res.json();
+      const json = await res.json();
+      if (!res.ok) { setError(`アップロード失敗: ${json.error ?? res.status}`); setUploading(false); return; }
+      const { url } = json;
       urls.push(url);
     }
 

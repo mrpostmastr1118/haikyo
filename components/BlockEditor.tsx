@@ -70,9 +70,11 @@ export default function BlockEditor({ blocks, onChange }: Props) {
       const fd = new FormData();
       fd.append('file', file);
       const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
+      const json = await res.json();
       if (res.ok) {
-        const { url } = await res.json();
-        onChange([...blocks, { type: 'image', url, caption: '' }]);
+        onChange([...blocks, { type: 'image', url: json.url, caption: '' }]);
+      } else {
+        alert(`画像アップロード失敗: ${json.error ?? res.status}`);
       }
     }
   }
@@ -81,9 +83,11 @@ export default function BlockEditor({ blocks, onChange }: Props) {
     const fd = new FormData();
     fd.append('file', file);
     const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
+    const json = await res.json();
     if (res.ok) {
-      const { url } = await res.json();
-      update(index, { url } as Partial<Block>);
+      update(index, { url: json.url } as Partial<Block>);
+    } else {
+      alert(`画像アップロード失敗: ${json.error ?? res.status}`);
     }
   }
 
