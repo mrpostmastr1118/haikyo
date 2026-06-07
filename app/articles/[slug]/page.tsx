@@ -5,6 +5,47 @@ import { SPOTS } from '@/lib/spots';
 import { SITE_URL } from '@/lib/site';
 import ShareButtons from '@/components/ShareButtons';
 import ImageCarousel from '@/components/ImageCarousel';
+import { Block } from '@/components/BlockEditor';
+
+function renderBody(body: string) {
+  try {
+    const blocks: Block[] = JSON.parse(body);
+    if (Array.isArray(blocks)) {
+      return (
+        <div className="space-y-5">
+          {blocks.map((block, i) => {
+            if (block.type === 'text') {
+              return (
+                <p key={i} className="text-sm leading-loose" style={{ color: 'var(--text)', fontFamily: 'Noto Serif JP, serif', fontWeight: 300, whiteSpace: 'pre-wrap' }}>
+                  {block.content}
+                </p>
+              );
+            }
+            if (block.type === 'image') {
+              return (
+                <figure key={i} className="my-6">
+                  <img src={block.url} alt={block.caption || ''} className="w-full rounded-lg object-cover" style={{ maxHeight: '480px', filter: 'sepia(8%) saturate(85%)' }} />
+                  {block.caption && (
+                    <figcaption className="text-center text-xs mt-2" style={{ color: 'var(--text-muted)', fontFamily: 'Noto Serif JP, serif', fontWeight: 300 }}>
+                      {block.caption}
+                    </figcaption>
+                  )}
+                </figure>
+              );
+            }
+            return null;
+          })}
+        </div>
+      );
+    }
+  } catch {}
+  // fallback: 既存のプレーンテキスト
+  return (
+    <p className="text-sm leading-loose" style={{ color: 'var(--text)', fontFamily: 'Noto Serif JP, serif', fontWeight: 300, whiteSpace: 'pre-line' }}>
+      {body}
+    </p>
+  );
+}
 
 type Params = Promise<{ slug: string }>;
 
@@ -114,12 +155,7 @@ export default async function ArticlePage({ params }: { params: Params }) {
         <div className="mb-8" style={{ borderTop: '1px solid var(--border)' }} />
 
         {/* Body */}
-        <div
-          className="text-sm leading-loose space-y-5"
-          style={{ color: 'var(--text)', fontFamily: 'Noto Serif JP, serif', fontWeight: 300, whiteSpace: 'pre-line' }}
-        >
-          {spot.body}
-        </div>
+        {renderBody(spot.body)}
 
         {/* Share */}
         <div className="mt-12 pt-8" style={{ borderTop: '1px solid var(--border)' }}>

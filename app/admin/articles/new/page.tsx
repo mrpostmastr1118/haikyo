@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { PREFECTURES, COUNTRIES } from '@/lib/regions';
+import BlockEditor, { Block } from '@/components/BlockEditor';
 
 const field = "w-full px-3 py-2.5 text-sm rounded border border-gray-200 bg-white outline-none focus:border-amber-500";
 const label = "block text-xs font-medium text-gray-600 mb-1";
@@ -21,10 +22,10 @@ export default function NewArticlePage() {
     lng: '',
     year_abandoned: '',
     excerpt: '',
-    body: '',
     tags: '',
     published: true,
   });
+  const [blocks, setBlocks] = useState<Block[]>([{ type: 'text', content: '' }]);
 
   const [previews, setPreviews] = useState<{ file: File; url: string }[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -92,7 +93,7 @@ export default function NewArticlePage() {
       lng: form.lng ? parseFloat(form.lng) : 0,
       year_abandoned: form.year_abandoned ? parseInt(form.year_abandoned) : null,
       excerpt: form.excerpt,
-      body: form.body,
+      body: JSON.stringify(blocks.filter((b) => b.type === 'image' || (b.type === 'text' && b.content.trim()))),
       tags: form.tags.split(/[,、]/).map((t) => t.trim()).filter(Boolean),
       images: urls,
       published: form.published,
@@ -214,10 +215,10 @@ export default function NewArticlePage() {
           <textarea required rows={2} className={field} value={form.excerpt} onChange={(e) => set('excerpt', e.target.value)} placeholder="一言で表す魅力的な説明（カード表示・OGPに使われます）" />
         </div>
 
-        {/* 本文 */}
+        {/* 本文 — ブロックエディタ */}
         <div>
-          <label className={label}>本文 <span className="text-red-400">*</span></label>
-          <textarea required rows={8} className={field} value={form.body} onChange={(e) => set('body', e.target.value)} placeholder="記事の本文。空行で段落を区切ってください。" />
+          <label className={label}>本文</label>
+          <BlockEditor blocks={blocks} onChange={setBlocks} />
         </div>
 
         {/* タグ */}
