@@ -1,6 +1,7 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
+import ImageDropZone from '@/components/ImageDropZone';
 
 export type Block =
   | { type: 'text'; content: string }
@@ -64,13 +65,8 @@ export default function BlockEditor({ blocks, onChange }: Props) {
     onChange([...blocks, { type: 'text', content: '' }]);
   }
 
-  function addImage() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = async () => {
-      const file = input.files?.[0];
-      if (!file) return;
+  async function addImageFiles(files: File[]) {
+    for (const file of files) {
       const fd = new FormData();
       fd.append('file', file);
       const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
@@ -78,8 +74,17 @@ export default function BlockEditor({ blocks, onChange }: Props) {
         const { url } = await res.json();
         onChange([...blocks, { type: 'image', url, caption: '' }]);
       }
-    };
-    input.click();
+    }
+  }
+
+  async function uploadAndSet(index: number, file: File) {
+    const fd = new FormData();
+    fd.append('file', file);
+    const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
+    if (res.ok) {
+      const { url } = await res.json();
+      update(index, { url } as Partial<Block>);
+    }
   }
 
   async function replaceImage(index: number) {
@@ -88,14 +93,7 @@ export default function BlockEditor({ blocks, onChange }: Props) {
     input.accept = 'image/*';
     input.onchange = async () => {
       const file = input.files?.[0];
-      if (!file) return;
-      const fd = new FormData();
-      fd.append('file', file);
-      const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
-      if (res.ok) {
-        const { url } = await res.json();
-        update(index, { url } as Partial<Block>);
-      }
+      if (file) await uploadAndSet(index, file);
     };
     input.click();
   }
@@ -159,13 +157,12 @@ export default function BlockEditor({ blocks, onChange }: Props) {
                   </div>
                 </div>
               ) : (
-                <button
-                  type="button"
-                  onClick={() => replaceImage(i)}
-                  className="w-full border-2 border-dashed border-gray-200 rounded py-6 text-gray-300 text-sm hover:border-amber-300 hover:text-amber-400 transition-colors"
-                >
-                  クリックして画像を選択
-                </button>
+                <ImageDropZone
+                  multiple={false}
+                  label="クリック または ドラッグ＆ドロップ"
+                  compact
+                  onFiles={async ([file]) => { if (file) await uploadAndSet(i, file); }}
+                />
               )}
             </div>
           )}
@@ -173,7 +170,7 @@ export default function BlockEditor({ blocks, onChange }: Props) {
       ))}
 
       {/* Add block buttons */}
-      <div className="flex gap-2 pt-1">
+      <div className="flex gap-2 pt-1 items-stretch">
         <button
           type="button"
           onClick={addText}
@@ -181,13 +178,14 @@ export default function BlockEditor({ blocks, onChange }: Props) {
         >
           <span className="text-base leading-none">¶</span> テキスト追加
         </button>
-        <button
-          type="button"
-          onClick={addImage}
-          className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg border border-dashed border-gray-200 text-gray-400 hover:border-amber-400 hover:text-amber-600 transition-colors"
-        >
-          <span className="text-base leading-none">🖼</span> 画像を挿入
-        </button>
+        <div className="flex-1">
+          <ImageDropZone
+            multiple
+            label="🖼 画像を挿入（D&Dも可）"
+            compact
+            onFiles={addImageFiles}
+          />
+        </div>
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { PREFECTURES, COUNTRIES } from '@/lib/regions';
 import BlockEditor, { Block } from '@/components/BlockEditor';
+import ImageDropZone from '@/components/ImageDropZone';
 
 const field = "w-full px-3 py-2.5 text-sm rounded border border-gray-200 bg-white outline-none focus:border-amber-500";
 const label = "block text-xs font-medium text-gray-600 mb-1";
@@ -51,12 +52,6 @@ export default function NewArticlePage() {
       set('region_key', value);
       set('region_label', country?.label ?? value);
     }
-  }
-
-  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []);
-    const newPreviews = files.map((f) => ({ file: f, url: URL.createObjectURL(f) }));
-    setPreviews((prev) => [...prev, ...newPreviews]);
   }
 
   function removeImage(index: number) {
@@ -126,14 +121,13 @@ export default function NewArticlePage() {
         {/* 写真アップロード */}
         <div>
           <label className={label}>写真（複数可）</label>
-          <div
-            onClick={() => fileRef.current?.click()}
-            className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center cursor-pointer hover:border-amber-400 transition-colors"
-          >
-            <p className="text-sm text-gray-400">クリックして写真を選択</p>
-            <p className="text-xs text-gray-300 mt-1">JPG / PNG / WEBP</p>
-          </div>
-          <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={onFileChange} />
+          <ImageDropZone
+            multiple
+            onFiles={(files) => {
+              const newPreviews = files.map((f) => ({ file: f, url: URL.createObjectURL(f) }));
+              setPreviews((prev) => [...prev, ...newPreviews]);
+            }}
+          />
 
           {previews.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-3">
