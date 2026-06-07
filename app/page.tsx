@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { useRef, useState, useEffect, useMemo } from 'react';
 import ArticleList, { ArticleListHandle } from '@/components/ArticleList';
 import BlogView from '@/components/BlogView';
+import PhotoView from '@/components/PhotoView';
 import BottomSheet from '@/components/BottomSheet';
 import { SPOTS, dbSpotToSpot, getArticleRegionKeys, getRegionGroups, type Spot } from '@/lib/spots';
 import { supabase } from '@/lib/supabase';
@@ -19,11 +20,12 @@ const MapView = dynamic(() => import('@/components/MapView'), {
   ),
 });
 
-type ViewMode = 'map' | 'blog';
+type ViewMode = 'map' | 'blog' | 'photo';
 
 const VIEW_TOGGLE: { mode: ViewMode; label: string; icon: string }[] = [
-  { mode: 'map',  label: '地図', icon: '🗺' },
-  { mode: 'blog', label: 'ブログ', icon: '☰' },
+  { mode: 'map',   label: '地図', icon: '🗺' },
+  { mode: 'blog',  label: 'ブログ', icon: '☰' },
+  { mode: 'photo', label: '写真', icon: '◼' },
 ];
 
 export default function Home() {
@@ -105,6 +107,13 @@ export default function Home() {
       {viewMode === 'blog' && (
         <div className="flex-1 overflow-hidden">
           <BlogView allSpots={allSpots} />
+        </div>
+      )}
+
+      {/* Photo view */}
+      {viewMode === 'photo' && (
+        <div className="flex-1 overflow-hidden">
+          <PhotoView allSpots={allSpots} />
         </div>
       )}
 
